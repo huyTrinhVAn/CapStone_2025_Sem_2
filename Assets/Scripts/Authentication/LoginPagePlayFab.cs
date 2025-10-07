@@ -3,7 +3,6 @@ using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
 using System;
-using UnityEditor.PackageManager;
 using UnityEngine.SceneManagement;
 public class LoginPagePlayFab : MonoBehaviour
 {
@@ -24,6 +23,15 @@ public class LoginPagePlayFab : MonoBehaviour
     [SerializeField] GameObject RecoveryPage;
     [Header("CreateAccount")]
     [SerializeField] GameObject CreateAccountPage;
+
+    [Header("Scene Flow")]
+    [SerializeField] string nextSceneName = "EducationBuilding";
+    private void Awake()
+    {
+        // Set TitleId 1 lần cho chắc (đổi sang TitleId của bạn nếu khác)
+        if (string.IsNullOrEmpty(PlayFabSettings.staticSettings.TitleId))
+            PlayFabSettings.staticSettings.TitleId = "4C053";
+    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -53,6 +61,11 @@ public class LoginPagePlayFab : MonoBehaviour
     }
     public void Login()
     {
+        if (string.IsNullOrEmpty(EmailLoginInput.text) || string.IsNullOrEmpty(PasswordLoginInput.text))
+        {
+            SystemText.text = "Email and password are required";
+            return;
+        }
         var request = new LoginWithEmailAddressRequest
         {
             Email = EmailLoginInput.text,
@@ -66,7 +79,27 @@ public class LoginPagePlayFab : MonoBehaviour
         SystemText.text = "Login Successful";
         Debug.Log("Login Successful");
         // Proceed to the next scene or main menu
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        // 1) Lưu trạng thái đăng nhập để scene sau đọc
+        if (GlobalGameState.Instance != null)
+        {
+            GlobalGameState.Instance.SetLogin(result);
+        }
+        else
+        {
+            // Phòng khi bạn quên đặt GlobalGameState trong scene Login
+            Debug.LogWarning("[Login] GlobalGameState is missing in the Login scene. Add it to avoid losing login state.");
+        }
+
+        // 2) Chuyển scene
+        if (!string.IsNullOrEmpty("MainGame"))
+        {
+            SceneManager.LoadScene("MainGame");
+        }
+        else
+        {
+            // fallback: sang scene kế tiếp trong Build Settings
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        }
     }
 
     public void RecoverUser()
@@ -74,7 +107,7 @@ public class LoginPagePlayFab : MonoBehaviour
         var request = new SendAccountRecoveryEmailRequest
         {
             Email = EmailRcoveryInput.text,
-            TitleId = "4C053" // Replace with your PlayFab title ID
+            TitleId = PlayFabSettings.staticSettings.TitleId // Replace with your PlayFab title ID
         };
         PlayFabClientAPI.SendAccountRecoveryEmail(request, OnRecoverSuccess, OnError);
     }
