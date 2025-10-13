@@ -8,8 +8,9 @@ public class GlobalGameState : MonoBehaviour
     public bool IsLoggedIn { get; private set; }
     public string PlayFabId { get; private set; }
     public LoginResult LoginResult { get; private set; }
-    public string CharacterId { get; private set; } // (tùy chọn) dùng sau khi tạo nhân vật
-    public string NextSpawnId;
+    public string CharacterId { get; private set; }
+    public string NextSpawnId { get; set; }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -34,15 +35,10 @@ public class GlobalGameState : MonoBehaviour
         CharacterId = characterId;
         Debug.Log($"[GlobalGameState] CharacterId set: {characterId}");
     }
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+
+    public void ClearNextSpawnId()
     {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
+        Debug.Log($"[GlobalGameState] Clearing NextSpawnId: {NextSpawnId}");
+        NextSpawnId = null;
     }
 }
