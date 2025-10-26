@@ -7,41 +7,40 @@ public class PlayerSpawnManager : MonoBehaviour
     [Tooltip("Prefab Third Person Controller (Starter Assets)")]
     public GameObject playerPrefab;
 
-    [Tooltip("Điểm spawn mặc định (Empty trong scene)")]
+    [Tooltip("Default spawn point (Empty in scene)")]
     public Transform defaultSpawnPoint;
 
-    [Tooltip("Tùy chọn: nhiều spawn points; nếu có thì sẽ chọn ngẫu nhiên.")]
+    [Tooltip("Optional: multiple spawn points; if available, random selection will be made.")]
     public Transform[] optionalSpawnPoints;
 
     [Header("Options")]
-    [Tooltip("Giữ player khi đổi scene (DontDestroyOnLoad)")]
+    [Tooltip("Hold player while changing scene (DontDestroyOnLoad)")]
     public bool persistPlayerAcrossScenes = false;
 
     [Header("Debug")]
-    [Tooltip("Hiển thị log chi tiết")]
+    [Tooltip("Show detailed log")]
     public bool debugMode = true;
 
     private GameObject _currentPlayerInstance;
 
     private void Start()
     {
-        // Đợi 1 frame để đảm bảo scene đã load xong
         Invoke(nameof(SpawnOrMovePlayer), 0.1f);
     }
 
     private void SpawnOrMovePlayer()
     {
-        // 1) Kiểm tra đã login chưa
+
         if (!IsPlayerLoggedIn())
         {
             LogDebug("Not logged in. Skip spawning.", true);
             return;
         }
 
-        // 2) Tìm player hiện tại
+
         _currentPlayerInstance = FindExistingPlayer();
 
-        // 3) Lấy spawn transform
+
         Transform spawnTransform = GetSpawnTransform();
 
         if (spawnTransform == null)
@@ -52,18 +51,18 @@ public class PlayerSpawnManager : MonoBehaviour
 
         if (_currentPlayerInstance != null)
         {
-            // Player đã tồn tại, chỉ di chuyển
+
             MovePlayerToSpawn(_currentPlayerInstance, spawnTransform);
             LogDebug($"Moved existing player to {spawnTransform.position}");
         }
         else
         {
-            // Chưa có player, spawn mới
+
             _currentPlayerInstance = SpawnNewPlayer(spawnTransform);
             LogDebug($"Spawned new player at {spawnTransform.position}");
         }
 
-        // Clear NextSpawnId sau khi đã sử dụng
+
         if (GlobalGameState.Instance != null)
         {
             GlobalGameState.Instance.ClearNextSpawnId();
@@ -81,7 +80,7 @@ public class PlayerSpawnManager : MonoBehaviour
     {
         if (GlobalGameState.Instance == null) return null;
 
-        // Tìm player theo tên
+
         string expectedName = $"Player_{GlobalGameState.Instance.PlayFabId}";
         GameObject player = GameObject.Find(expectedName);
 
@@ -92,7 +91,7 @@ public class PlayerSpawnManager : MonoBehaviour
         }
 
 
-        // Fallback: tìm theo tag - NHƯNG không trả về PlayerSpawnManager
+
 
         try
 
@@ -104,7 +103,7 @@ public class PlayerSpawnManager : MonoBehaviour
 
             {
 
-                // Kiểm tra KHÔNG phải là chính object này
+
 
                 if (taggedPlayer != gameObject && !taggedPlayer.GetComponent<PlayerSpawnManager>())
 
@@ -132,7 +131,7 @@ public class PlayerSpawnManager : MonoBehaviour
 
         {
 
-            // Tag "Player" không tồn tại
+
 
             LogDebug("No 'Player' tag found in project");
 
@@ -149,7 +148,7 @@ public class PlayerSpawnManager : MonoBehaviour
     {
         LogDebug($"Getting spawn transform. NextSpawnId = '{GlobalGameState.Instance?.NextSpawnId}'");
 
-        // 1) Ưu tiên NextSpawnId nếu có
+
         if (GlobalGameState.Instance != null && !string.IsNullOrEmpty(GlobalGameState.Instance.NextSpawnId))
         {
             Transform namedSpawn = ResolveNamedSpawnPoint(GlobalGameState.Instance.NextSpawnId);
@@ -164,7 +163,7 @@ public class PlayerSpawnManager : MonoBehaviour
             }
         }
 
-        // 2) Chọn random từ optionalSpawnPoints
+
         if (optionalSpawnPoints != null && optionalSpawnPoints.Length > 0)
         {
             Transform randomSpawn = optionalSpawnPoints[Random.Range(0, optionalSpawnPoints.Length)];
@@ -175,14 +174,14 @@ public class PlayerSpawnManager : MonoBehaviour
             }
         }
 
-        // 3) Fallback: defaultSpawnPoint
+
         if (defaultSpawnPoint != null)
         {
             LogDebug($"Using default spawn point: {defaultSpawnPoint.name}");
             return defaultSpawnPoint;
         }
 
-        // 4) Last resort: vị trí của manager này
+
         LogDebug("Using PlayerSpawnManager position as spawn", true);
         return transform;
     }
@@ -217,11 +216,11 @@ public class PlayerSpawnManager : MonoBehaviour
             return null;
         }
 
-        // Spawn tại vị trí spawn point
+
         GameObject player = Instantiate(playerPrefab, spawnTransform.position, spawnTransform.rotation);
         player.name = $"Player_{GlobalGameState.Instance.PlayFabId}";
 
-        // Tag ROOT object để dễ tìm
+
         if (string.IsNullOrEmpty(player.tag))
         {
             player.tag = "Player";
@@ -234,7 +233,7 @@ public class PlayerSpawnManager : MonoBehaviour
 
         LogDebug($"Created new player: {player.name} at position: {player.transform.position}");
 
-        // Log hierarchy để debug
+
         LogDebug($"Player hierarchy: Root={player.name}, Children={player.transform.childCount}");
 
         return player;
@@ -244,20 +243,20 @@ public class PlayerSpawnManager : MonoBehaviour
     {
         if (player == null || spawnTransform == null) return;
 
-        // Tìm CharacterController - có thể ở root hoặc child
+
         var characterController = player.GetComponent<CharacterController>();
         if (characterController == null)
         {
             characterController = player.GetComponentInChildren<CharacterController>();
         }
 
-        // Disable character controller nếu có để tránh conflict
+
         if (characterController != null)
         {
             characterController.enabled = false;
         }
 
-        // Set position cho ROOT object (parent cao nhất)
+
         Transform rootTransform = player.transform;
         rootTransform.SetPositionAndRotation(spawnTransform.position, spawnTransform.rotation);
 
@@ -267,7 +266,7 @@ public class PlayerSpawnManager : MonoBehaviour
             characterController.enabled = true;
         }
 
-        // Reset velocity nếu có Rigidbody (check cả root và children)
+
         var rb = player.GetComponent<Rigidbody>();
         if (rb == null)
         {

@@ -78,26 +78,22 @@ public class LoginPagePlayFab : MonoBehaviour
     {
         SystemText.text = "Login Successful";
         Debug.Log("Login Successful");
-        // Proceed to the next scene or main menu
-        // 1) Lưu trạng thái đăng nhập để scene sau đọc
+
         if (GlobalGameState.Instance != null)
         {
             GlobalGameState.Instance.SetLogin(result);
         }
         else
         {
-            // Phòng khi bạn quên đặt GlobalGameState trong scene Login
             Debug.LogWarning("[Login] GlobalGameState is missing in the Login scene. Add it to avoid losing login state.");
         }
 
-        // 2) Chuyển scene
         if (!string.IsNullOrEmpty("MainGame"))
         {
             SceneManager.LoadScene("MainGame");
         }
         else
         {
-            // fallback: sang scene kế tiếp trong Build Settings
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         }
     }

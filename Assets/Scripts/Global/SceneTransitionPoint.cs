@@ -16,7 +16,7 @@ public class SceneTransitionPoint : MonoBehaviour
 
     private void Start()
     {
-        // Đảm bảo collider là trigger
+
         Collider col = GetComponent<Collider>();
         if (col != null && !col.isTrigger)
         {
@@ -29,7 +29,7 @@ public class SceneTransitionPoint : MonoBehaviour
     {
         if (_isTransitioning) return;
 
-        // Chỉ phản ứng nếu player bước vào
+
         if (!other.CompareTag("Player"))
         {
             if (debugMode)
@@ -42,7 +42,7 @@ public class SceneTransitionPoint : MonoBehaviour
         if (debugMode)
             Debug.Log($"[SceneTransitionPoint] Player entered! Transitioning to '{targetSceneName}' with spawn '{targetSpawnId}'");
 
-        // Lưu spawnId vào GlobalGameState
+
         var gs = GlobalGameState.Instance;
         if (gs != null)
         {
@@ -55,7 +55,7 @@ public class SceneTransitionPoint : MonoBehaviour
             Debug.LogError("[SceneTransitionPoint] GlobalGameState.Instance is null!");
         }
 
-        // Load scene đích
+
         SceneManager.LoadScene(targetSceneName);
     }
 
